@@ -1,0 +1,171 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-4">
+      <div class="card text-center">
+        <div class="card-body">
+          {% if profile.avatar %}
+            <img src="{{ profile.avatar.url }}" class="rounded-circle mb-3" style="width: 180px; height: 180px; object-fit: cover; border: 3px solid #eee;" alt="{{ profile.user.username }}'s avatar">
+          {% else %}
+            <img src="https://via.placeholder.com/180" class="rounded-circle mb-3" alt="No avatar">
+          {% endif %}
+          <h3>{{ profile.user.username }}</h3>
+          <p class="text-muted">{{ profile.bio|default:'No bio yet.' }}</p>
+          
+          <!-- Profile Stats -->
+          <div class="row text-center mb-3">
+            <div class="col-4">
+              <strong>{{ posts_count }}</strong>
+              <br><small class="text-muted">Posts</small>
+            </div>
+            <div class="col-4">
+              <strong>{{ followers_count }}</strong>
+              <br><small class="text-muted">Followers</small>
+            </div>
+            <div class="col-4">
+              <strong>{{ following_count }}</strong>
+              <br><small class="text-muted">Following</small>
+            </div>
+          </div>
+          
+          {% if is_owner %}
+            <hr>
+            <h5>Edit Profile</h5>
+            <form method="post" enctype="multipart/form-data">
+              {% csrf_token %}
+              {{ form.as_p }}
+              <button type="submit" class="btn btn-primary btn-sm">Update Profile</button>
+            </form>
+          {% endif %}
+        </div>
+      </div>
+      
+      {% if is_owner and blocked_users %}
+      <div class="card mt-3">
+        <div class="card-header">
+          <h5 class="mb-0">
+            <i class="fas fa-ban text-danger"></i> Blocked Users
+          </h5>
+        </div>
+        <div class="card-body">
+          {% for block in blocked_users %}
+            <div class="d-flex justify-content-between align-items-center mb-2 p-2 border rounded">
+              <div class="d-flex align-items-center">
+                <strong>{{ block.blocked_user.username }}</strong>
+                <small class="text-muted ms-2">Blocked on {{ block.timestamp|date:"M d, Y" }}</small>
+              </div>
+              <a href="{% url 'posts:unblock_user' block.blocked_user.id %}" 
+                 class="btn btn-sm btn-outline-success"
+                 onclick="return confirm('Are you sure you want to unblock {{ block.blocked_user.username }}?')">
+                <i class="fas fa-unlock"></i> Unblock
+              </a>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% elif is_owner %}
+      <div class="card mt-3">
+        <div class="card-body text-center text-muted">
+          <i class="fas fa-ban fa-2x mb-2"></i>
+          <p>No blocked users</p>
+        </div>
+      </div>
+      {% endif %}
+      
+      <!-- Following Section -->
+      {% if following %}
+      <div class="card mt-3">
+        <div class="card-header">
+          <h5 class="mb-0">
+            <i class="fas fa-user-friends text-primary"></i> Following ({{ following_count }})
+          </h5>
+        </div>
+        <div class="card-body">
+          {% for follow in following %}
+            <div class="d-flex justify-content-between align-items-center mb-2 p-2 border rounded">
+              <div class="d-flex align-items-center">
+                <strong>{{ follow.following.username }}</strong>
+                <small class="text-muted ms-2">Following since {{ follow.created_at|date:"M d, Y" }}</small>
+              </div>
+              <div>
+                <a href="{% url 'users:profile' follow.following.username %}" 
+                   class="btn btn-sm btn-outline-primary me-2">
+                  <i class="fas fa-user"></i> View Profile
+                </a>
+                {% if is_owner %}
+                <a href="{% url 'posts:follow_user' follow.following.id %}" 
+                   class="btn btn-sm btn-outline-danger"
+                   onclick="return confirm('Are you sure you want to unfollow {{ follow.following.username }}?')">
+                  <i class="fas fa-user-minus"></i> Unfollow
+                </a>
+                {% endif %}
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% elif is_owner %}
+      <div class="card mt-3">
+        <div class="card-body text-center text-muted">
+          <i class="fas fa-user-friends fa-2x mb-2"></i>
+          <p>You're not following anyone yet</p>
+          <a href="{% url 'posts:search_users' %}" class="btn btn-primary btn-sm">Find People to Follow</a>
+        </div>
+      </div>
+      {% endif %}
+      
+      <!-- Followers Section -->
+      {% if followers %}
+      <div class="card mt-3">
+        <div class="card-header">
+          <h5 class="mb-0">
+            <i class="fas fa-users text-success"></i> Followers ({{ followers_count }})
+          </h5>
+        </div>
+        <div class="card-body">
+          {% for follow in followers %}
+            <div class="d-flex justify-content-between align-items-center mb-2 p-2 border rounded">
+              <div class="d-flex align-items-center">
+                <strong>{{ follow.follower.username }}</strong>
+                <small class="text-muted ms-2">Following since {{ follow.created_at|date:"M d, Y" }}</small>
+              </div>
+              <div>
+                <a href="{% url 'users:profile' follow.follower.username %}" 
+                   class="btn btn-sm btn-outline-primary">
+                  <i class="fas fa-user"></i> View Profile
+                </a>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% elif is_owner %}
+      <div class="card mt-3">
+        <div class="card-body text-center text-muted">
+          <i class="fas fa-users fa-2x mb-2"></i>
+          <p>No followers yet</p>
+          <p class="small">Share interesting posts to attract followers!</p>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+    <div class="col-md-8">
+      <h4>User Posts</h4>
+      {% for post in posts %}
+        <div class="card mb-3">
+          <div class="card-body">
+            <p>{{ post.text }}</p>
+            {% if post.image %}
+              <img src="{{ post.image.url }}" class="img-fluid mb-2">
+            {% endif %}
+            <small class="text-muted">{{ post.timestamp }}</small>
+          </div>
+        </div>
+      {% empty %}
+        <p>No posts yet.</p>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

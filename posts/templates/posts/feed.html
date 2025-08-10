@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="row">
+  <div class="col-md-3">
+    <div class="card sticky-top">
+      <div class="card-header">
+        <h5 class="mb-0"><i class="fas fa-search"></i> Search & Filter</h5>
+      </div>
+      <div class="card-body">
+        <form method="get">
+          <div class="mb-3">
+            <label class="form-label"><i class="fas fa-search"></i> Search</label>
+            <input type="text" name="q" value="{{ query }}" class="form-control" placeholder="Search posts, users, or tags...">
+          </div>
+          <div class="mb-3">
+            <label class="form-label"><i class="fas fa-tags"></i> Category</label>
+            <select name="category" class="form-control">
+              <option value="">All Categories</option>
+              {% for category in categories %}
+                <option value="{{ category.id }}" {% if selected_category == category.id|stringformat:"s" %}selected{% endif %}>
+                  {{ category.name }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="d-grid gap-2">
+            <button type="submit" class="btn btn-primary">
+              <i class="fas fa-search"></i> Search
+            </button>
+            <a href="{% url 'posts:home_feed' %}" class="btn btn-outline-secondary">
+              <i class="fas fa-times"></i> Clear
+            </a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-9">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h2 class="mb-0"><i class="fas fa-home"></i> Home Feed</h2>
+      <a href="/posts/create/" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Create Post
+      </a>
+    </div>
+    {% for post in posts %}
+      <div class="card mb-4 post-card">
+        <div class="card-body">
+          <div class="d-flex align-items-center mb-3">
+            <div class="avatar-container me-3">
+              {% if post.user.profile.avatar %}
+                <img src="{{ post.user.profile.avatar.url }}" class="rounded-circle" style="width: 50px; height: 50px; object-fit: cover;" alt="{{ post.user.username }}">
+              {% else %}
+                <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center text-white" style="width: 50px; height: 50px;">
+                  <i class="fas fa-user"></i>
+                </div>
+              {% endif %}
+            </div>
+            <div class="flex-grow-1">
+              <h6 class="mb-0 fw-bold">
+                <a href="{% url 'users:profile' post.user.username %}" class="text-decoration-none">
+                  {{ post.user.username }}
+                </a>
+              </h6>
+              <small class="text-muted">
+                <i class="fas fa-clock"></i> {{ post.timestamp|timesince }} ago
+              </small>
+            </div>
+          </div>
+          {% if post.is_shared %}
+            <div class="alert alert-info mb-3">
+              <i class="fas fa-share"></i> Shared from 
+              <a href="{% url 'users:profile' post.shared_from.user.username %}" class="text-decoration-none">
+                {{ post.shared_from.user.username }}
+              </a>'s post
+            </div>
+          {% endif %}
+          <p class="card-text fs-6 mb-3">{{ post.text }}</p>
+          {% if post.image %}
+            <div class="post-image mb-3">
+              <img src="{{ post.image.url }}" class="img-fluid rounded" style="max-height: 400px; width: 100%; object-fit: cover;">
+            </div>
+          {% endif %}
+          <div class="post-tags mb-3">
+            {% if post.category %}
+              <span class="badge bg-primary me-1">
+                <i class="fas fa-folder"></i> {{ post.category.name }}
+              </span>
+            {% endif %}
+            {% for tag in post.tags.all %}
+              <span class="badge bg-secondary me-1">
+                <i class="fas fa-tag"></i> {{ tag.name }}
+              </span>
+            {% endfor %}
+          </div>
+          <div class="post-actions d-flex justify-content-between align-items-center">
+            <div class="action-buttons">
+              <button class="btn btn-outline-primary btn-sm like-btn me-2" data-post-id="{{ post.id }}">
+                <i class="fas fa-heart"></i> Like (<span class="like-count">{{ post.likes.count }}</span>)
+              </button>
+              <a href="{% url 'posts:post_detail' post.id %}" class="btn btn-outline-info btn-sm me-2">
+                <i class="fas fa-comment"></i> Comments ({{ post.comments.count }})
+              </a>
+              <a href="{% url 'posts:share_post' post.id %}" class="btn btn-outline-success btn-sm">
+                <i class="fas fa-share"></i> Share
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    {% empty %}
+      <div class="text-center py-5">
+        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+        <h4 class="text-muted">No posts found</h4>
+        <p class="text-muted">Be the first to share something!</p>
+        <a href="/posts/create/" class="btn btn-primary">
+          <i class="fas fa-plus"></i> Create Your First Post
+        </a>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+<script>
+document.querySelectorAll('.like-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    const postId = this.getAttribute('data-post-id');
+    fetch(`/posts/like/${postId}/`, {method: 'POST', headers: {'X-CSRFToken': '{{ csrf_token }}'}})
+      .then(response => response.json())
+      .then(data => {
+        this.querySelector('.like-count').textContent = data.like_count;
+        this.classList.toggle('btn-primary', data.liked);
+        this.classList.toggle('btn-outline-primary', !data.liked);
+      });
+  });
+});
+</script>
+{% endblock %}

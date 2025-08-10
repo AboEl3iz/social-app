@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-8 col-lg-6">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="mb-0"><i class="fas fa-pen"></i> Create New Post</h3>
+        <p class="mb-0 mt-2 opacity-75">Share what's on your mind with the community</p>
+      </div>
+      <div class="card-body p-4">
+        <form method="post" enctype="multipart/form-data">
+          {% csrf_token %}
+          
+          <div class="mb-3">
+            <label class="form-label" for="{{ form.text.id_for_label }}">
+              <i class="fas fa-comment"></i> What's on your mind?
+            </label>
+            {{ form.text }}
+            {% if form.text.errors %}
+              <div class="text-danger">
+                {% for error in form.text.errors %}
+                  <small>{{ error }}</small>
+                {% endfor %}
+              </div>
+            {% endif %}
+          </div>
+          
+          <div class="mb-3">
+            <label class="form-label" for="{{ form.image.id_for_label }}">
+              <i class="fas fa-image"></i> Add Image (Optional)
+            </label>
+            {{ form.image }}
+            {% if form.image.errors %}
+              <div class="text-danger">
+                {% for error in form.image.errors %}
+                  <small>{{ error }}</small>
+                {% endfor %}
+              </div>
+            {% endif %}
+          </div>
+          
+          <div class="mb-3">
+            <label class="form-label" for="{{ form.category.id_for_label }}">
+              <i class="fas fa-folder"></i> Category (Optional)
+            </label>
+            {{ form.category }}
+            {% if form.category.errors %}
+              <div class="text-danger">
+                {% for error in form.category.errors %}
+                  <small>{{ error }}</small>
+                {% endfor %}
+              </div>
+            {% endif %}
+          </div>
+          
+          <div class="mb-3">
+            <label class="form-label" for="{{ form.tags.id_for_label }}">
+              <i class="fas fa-tags"></i> Tags (Optional)
+            </label>
+            {{ form.tags }}
+            {% if form.tags.help_text %}
+              <div class="form-text">{{ form.tags.help_text }}</div>
+            {% endif %}
+            {% if form.tags.errors %}
+              <div class="text-danger">
+                {% for error in form.tags.errors %}
+                  <small>{{ error }}</small>
+                {% endfor %}
+              </div>
+            {% endif %}
+          </div>
+          
+          {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+              {% for error in form.non_field_errors %}
+                <div>{{ error }}</div>
+              {% endfor %}
+            </div>
+          {% endif %}
+          
+          <div class="d-grid gap-2">
+            <button type="submit" class="btn btn-primary btn-lg">
+              <i class="fas fa-paper-plane"></i> Share Post
+            </button>
+            <a href="{% url 'posts:home_feed' %}" class="btn btn-outline-secondary">
+              <i class="fas fa-arrow-left"></i> Cancel
+            </a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
