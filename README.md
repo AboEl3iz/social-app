@@ -125,7 +125,7 @@ The application is organized into modular Django apps:
 ### Video Demo
 Watch the complete application walkthrough:
 
-https://github.com/user-attachments/assets/demo.mp4
+[🎥 View Demo Video](https://drive.google.com/file/d/1RPq0BzlVitiffllbu1ZflVoHB5t0nR8z/view?usp=drive_link)
 
 *The video demonstrates user registration, profile setup, post creation, social interactions, and all key features of SocialHub.*
 
